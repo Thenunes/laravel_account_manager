@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AccountController;
 
 /*
 |--------------------------------------------------------------------------
@@ -16,3 +17,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return response()->json(['message' => 'Account Manager API', 'status' => 'Connected']);
 });
+
+Route::get('balance/{account_id}', [AccountController::class, 'balance']);
+
+Route::get('event', [AccountController::class, 'event']);
