@@ -53,10 +53,14 @@ class AccountController extends Controller
         if($amount <= 0)
             return response()->json(["message" => "amount must be greater then 0."], Response::HTTP_NOT_FOUND);;
 
-        //TODO create if it is non-existing account
-        $account = new Account($destination, $amount);
-        $account->save();
 
+        $account = Account::find($destination);
+        if($account)
+            $account->deposit($amount);
+        else
+            $account = new Account($destination, $amount);
+
+        $account->save();
         return response()->json([
             'destination' => [
                 'id' => $account->id,

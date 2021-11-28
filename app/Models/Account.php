@@ -23,6 +23,12 @@ class Account
         return $this->balance;
     }
 
+    public function deposit($amount)
+    {   
+        $this->balance += $amount;
+        return $this; 
+    }
+
     public function save()
     {   
         $accounts = Cache::get(self::CACHE_KEY);
