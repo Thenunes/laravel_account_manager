@@ -28,12 +28,7 @@ class AccountController extends Controller
         if(!$account)
             return response()->json(["message" => "Account not found."], Response::HTTP_NOT_FOUND);
 
-        return response()->json([
-            'destination' => [
-                'id' => $account->id,
-                'balance' => $account->getBalance()
-            ]
-        ], Response::HTTP_OK);
+        return response()->json($account->getBalance(), Response::HTTP_OK);
     }
 
     private function eventDeposit(Request $request)
@@ -114,7 +109,7 @@ class AccountController extends Controller
         
         // Response
         return response()->json([
-            'destination' => [
+            'origin' => [
                 'id' => $account->id,
                 'balance' => $account->getBalance()
             ]
@@ -123,7 +118,7 @@ class AccountController extends Controller
 
     private function eventTransfer(Request $request)
     {
-        $originId = $request->input('origin');
+        $origin = $request->input('origin');
         $destination = $request->input('destination');
         $amount = $request->input('amount');
 
@@ -149,16 +144,22 @@ class AccountController extends Controller
         // Logic
         try 
         {
-            $account = Account::find($origin);
-            if(!$account)
-                return response()->json(["message" => "Account not found."], Response::HTTP_NOT_FOUND);
+            $originAccount = Account::find($origin);
+            if(!$originAccount)
+                return response()->json(["message" => "Origin account not found."], Response::HTTP_NOT_FOUND);
 
-            $destination = Account::find($destination);
-            if(!$destination)
-                return response()->json(["message" => "Account not found."], Response::HTTP_NOT_FOUND);
+            $destinationAccount = Account::find($destination);
+            if(!$destinationAccount)
+                return response()->json(["message" => "Destination account not found."], Response::HTTP_NOT_FOUND);
 
-            $account->withdraw($amount);
-            $account->save();
+            if($originAccount->getBalance() < $amount)
+                throw new Exception("Origin account has insufficient funds");
+
+            $originAccount->withdraw($amount);
+            $originAccount->save();
+
+            $destinationAccount->deposit($amount);
+            $destinationAccount->save();
         } 
         catch(\Exception $e)
         {
@@ -167,9 +168,13 @@ class AccountController extends Controller
         
         // Response
         return response()->json([
+            'origin' => [
+                'id' => $originAccount->id,
+                'balance' => $originAccount->getBalance()
+            ],
             'destination' => [
-                'id' => $account->id,
-                'balance' => $account->getBalance()
+                'id' => $destinationAccount->id,
+                'balance' => $destinationAccount->getBalance()
             ]
         ], Response::HTTP_OK);
     }
