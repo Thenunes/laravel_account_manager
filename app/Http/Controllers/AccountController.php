@@ -33,16 +33,16 @@ class AccountController extends Controller
         $amount = $request->input('amount');
 
         if(empty($destination))
-            return response()->json(["message" => "The destination cannot be empty."], Response::HTTP_NOT_FOUND);
+            return response()->json(["message" => "destination cannot be empty."], Response::HTTP_NOT_FOUND);
 
         if(!is_numeric($destination))
-            return response()->json(["message" => "The destination must be a integer."], Response::HTTP_NOT_FOUND);
+            return response()->json(["message" => "destination must be a integer."], Response::HTTP_NOT_FOUND);
 
         if(empty($amount))
-            return response()->json(["message" => "The amount cannot be empty."], Response::HTTP_NOT_FOUND);
+            return response()->json(["message" => "amount cannot be empty."], Response::HTTP_NOT_FOUND);
 
         if($amount <= 0)
-            return response()->json(["message" => "The amount must be greater then 0."], Response::HTTP_NOT_FOUND);;
+            return response()->json(["message" => "amount must be greater then 0."], Response::HTTP_NOT_FOUND);;
 
         //TODO create if it is non-existing account
         $account = new Account($destination, $amount);
@@ -70,7 +70,7 @@ class AccountController extends Controller
         $type = $request->input('type');
 
         if(empty($type))
-            return response()->json(["message" => 'The event type cannot be empty.'], Response::HTTP_NOT_FOUND);
+            return response()->json(["message" => 'type cannot be empty.'], Response::HTTP_NOT_FOUND);
 
         switch ($type) 
         {
@@ -79,7 +79,7 @@ class AccountController extends Controller
             case self::EVENT_DEPOSIT: return $this->eventTransfer($request); break;
             
             default: 
-                return response()->json(["message" => 'Event type not found.'], Response::HTTP_NOT_FOUND);
+                return response()->json(["message" => 'type not found.'], Response::HTTP_NOT_FOUND);
                 break;
         }
     }
