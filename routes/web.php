@@ -20,4 +20,4 @@ Route::get('/', function () {
 
 Route::get('balance/{account_id}', [AccountController::class, 'balance']);
 
-Route::get('event', [AccountController::class, 'event']);
+Route::post('event', [AccountController::class, 'event']);
