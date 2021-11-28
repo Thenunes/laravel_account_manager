@@ -4,8 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
+use Exception;
 
-class Account
+class Account 
 {
     const CACHE_KEY = 'accounts';
 
@@ -26,6 +27,15 @@ class Account
     public function deposit($amount)
     {   
         $this->balance += $amount;
+        return $this; 
+    }
+
+    public function withdraw($amount)
+    {   
+        if($this->balance < $amount)
+            throw new Exception("Insufficient funds");
+            
+        $this->balance -= $amount;
         return $this; 
     }
 
