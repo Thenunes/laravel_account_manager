@@ -18,6 +18,8 @@ Route::get('/', function () {
     return response()->json(['message' => 'Account Manager API', 'status' => 'Connected']);
 });
 
-Route::get('balance/{account_id}', [AccountController::class, 'balance']);
+Route::post('reset', [AccountController::class, 'reset']);
+
+Route::get('balance', [AccountController::class, 'balance']);
 
 Route::post('event', [AccountController::class, 'event']);

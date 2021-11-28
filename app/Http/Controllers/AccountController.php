@@ -12,12 +12,21 @@ class AccountController extends Controller
     const EVENT_WITHDRAW = 'withdraw';
     const EVENT_TRANSFER = 'transfer';
 
-    public function balance($account_id)
+    public function reset()
     {   
-        //TODO get the account from the list
-        $destination = 100;
-        $amount = 10;
-        $account = new Account($destination, $amount);
+        Account::resetAccounts();
+        return response()->json(["message" => "Ok"], Response::HTTP_OK);
+    }
+
+    public function balance(Request $request)
+    {   
+        $account_id = $request->input('account_id');
+        if(empty($account_id))
+            return response()->json(["message" => "account_id cannot be empty."], Response::HTTP_NOT_FOUND);
+
+        $account = Account::find($account_id);
+        if(!$account)
+            return response()->json(["message" => "Account not found."], Response::HTTP_NOT_FOUND);
 
         return response()->json([
             'destination' => [
@@ -46,6 +55,7 @@ class AccountController extends Controller
 
         //TODO create if it is non-existing account
         $account = new Account($destination, $amount);
+        $account->save();
 
         return response()->json([
             'destination' => [
