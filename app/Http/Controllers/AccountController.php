@@ -15,20 +15,24 @@ class AccountController extends Controller
     public function reset()
     {   
         Account::resetAccounts();
-        return response()->json(["message" => "Ok"], Response::HTTP_OK);
+        return response('OK', Response::HTTP_OK);
     }
 
     public function balance(Request $request)
     {   
         $accountId = $request->input('account_id');
-        if(empty($accountId))
-            return response()->json(["message" => "account_id cannot be empty."], Response::HTTP_NOT_FOUND);
+        if(empty($accountId)){
+            // account_id cannot be empty.
+            return response(0, Response::HTTP_NOT_FOUND);
+        }
 
         $account = Account::find($accountId);
-        if(!$account)
-            return response()->json(["message" => "Account not found."], Response::HTTP_NOT_FOUND);
+        if(!$account){
+            // Account not found.
+            return response(0, Response::HTTP_NOT_FOUND);
+        }
 
-        return response()->json($account->getBalance(), Response::HTTP_OK);
+        return response($account->getBalance(), Response::HTTP_OK);
     }
 
     private function eventDeposit(Request $request)
@@ -38,40 +42,55 @@ class AccountController extends Controller
 
         // Tests
         if(empty($destination))
-            return response()->json(["message" => "destination cannot be empty."], Response::HTTP_NOT_FOUND);
+        {
+            // destination cannot be empty.
+            return response(0, Response::HTTP_NOT_FOUND);
+        }
 
         if(!is_numeric($destination))
-            return response()->json(["message" => "destination must be a integer."], Response::HTTP_NOT_FOUND);
+        {
+            // destination must be a integer.
+            return response(0, Response::HTTP_NOT_FOUND);
+        }
 
         if(empty($amount))
-            return response()->json(["message" => "amount cannot be empty."], Response::HTTP_NOT_FOUND);
+        {
+            // amount cannot be empty.
+            return response(0, Response::HTTP_NOT_FOUND);
+        }
 
         if($amount <= 0)
-            return response()->json(["message" => "amount must be greater then 0."], Response::HTTP_NOT_FOUND);
+        {
+            // amount must be greater then 0.
+            return response(0, Response::HTTP_NOT_FOUND);
+        }
 
         // Logic
         try 
         {
             $account = Account::find($destination);
-            if($account)
-                $account->deposit($amount);
-            else
-                $account = new Account($destination, $amount);
-
+            if(!$account){
+                // create if not exist
+                $account = new Account($destination, 0);
+            }
+            
+            $account->deposit($amount);
             $account->save();
         } 
         catch(\Exception $e)
         {
-            return response()->json(["message" => $e->getMessage()], Response::HTTP_NOT_FOUND);
+            return response(0, Response::HTTP_NOT_FOUND);
         }
 
         // Response
-        return response()->json([
-            'destination' => [
-                'id' => $account->id,
-                'balance' => $account->getBalance()
-            ]
-        ], Response::HTTP_OK);
+        return response('{"destination": {"id":"'.$account->id.'", "balance":'.$account->getBalance().'}}', Response::HTTP_CREATED);
+
+        // return response()->json([
+        //     'destination' => [
+        //         'id' => $account->id,
+        //         'balance' => $account->getBalance()
+        //     ]
+        // ], Response::HTTP_CREATED);
     }
 
     private function eventWithdraw(Request $request)
@@ -80,40 +99,52 @@ class AccountController extends Controller
         $amount = $request->input('amount');
 
         // Tests
-        if(empty($origin))
-            return response()->json(["message" => "origin cannot be empty."], Response::HTTP_NOT_FOUND);
+        if(empty($origin)){
+            // origin cannot be empty.
+            return response(0, Response::HTTP_NOT_FOUND);
+        }
 
-        if(!is_numeric($origin))
-            return response()->json(["message" => "origin must be a integer."], Response::HTTP_NOT_FOUND);
+        if(!is_numeric($origin)){
+            // origin must be a integer.
+            return response(0, Response::HTTP_NOT_FOUND);
+        }
 
-        if(empty($amount))
-            return response()->json(["message" => "amount cannot be empty."], Response::HTTP_NOT_FOUND);
+        if(empty($amount)){
+            // amount cannot be empty.
+            return response(0, Response::HTTP_NOT_FOUND);
+        }
 
-        if($amount <= 0)
-            return response()->json(["message" => "amount must be greater then 0."], Response::HTTP_NOT_FOUND);
+        if($amount <= 0){
+            // amount must be greater then 0.
+            return response(0, Response::HTTP_NOT_FOUND);
+        }
 
         // Logic
         try 
         {
             $account = Account::find($origin);
-            if(!$account)
-                return response()->json(["message" => "Account not found."], Response::HTTP_NOT_FOUND);
+            if(!$account){
+                // Account not found.
+                return response(0, Response::HTTP_NOT_FOUND);
+            }
 
             $account->withdraw($amount);
             $account->save();
         } 
         catch(\Exception $e)
         {
-            return response()->json(["message" => $e->getMessage()], Response::HTTP_NOT_FOUND);
+            return response(0, Response::HTTP_NOT_FOUND);
         }
         
         // Response
-        return response()->json([
-            'origin' => [
-                'id' => $account->id,
-                'balance' => $account->getBalance()
-            ]
-        ], Response::HTTP_OK);
+        return response('{"origin": {"id":"'.$account->id.'", "balance":'.$account->getBalance().'}}', Response::HTTP_CREATED);
+
+        // return response()->json([
+        //     'origin' => [
+        //         'id' => $account->id,
+        //         'balance' => $account->getBalance()
+        //     ]
+        // ], Response::HTTP_CREATED);
     }
 
     private function eventTransfer(Request $request)
@@ -124,36 +155,60 @@ class AccountController extends Controller
 
         // Tests
         if(empty($origin))
-            return response()->json(["message" => "origin cannot be empty."], Response::HTTP_NOT_FOUND);
+        {
+            // origin cannot be empty.
+            return response(0, Response::HTTP_NOT_FOUND);
+        }
 
         if(!is_numeric($origin))
-            return response()->json(["message" => "origin must be a integer."], Response::HTTP_NOT_FOUND);
+        {
+            // origin must be a integer.
+            return response(0, Response::HTTP_NOT_FOUND);
+        }
 
         if(empty($destination))
-            return response()->json(["message" => "destination cannot be empty."], Response::HTTP_NOT_FOUND);
+        {
+            // destination cannot be empty.
+            return response(0, Response::HTTP_NOT_FOUND);
+        }
 
         if(!is_numeric($destination))
-            return response()->json(["message" => "destination must be a integer."], Response::HTTP_NOT_FOUND);
+        {
+            // destination must be a integer.
+            return response(0, Response::HTTP_NOT_FOUND);
+        }
 
         if(empty($amount))
-            return response()->json(["message" => "amount cannot be empty."], Response::HTTP_NOT_FOUND);
+        {
+            // amount cannot be empty.
+            return response(0, Response::HTTP_NOT_FOUND);
+        }
 
         if($amount <= 0)
-            return response()->json(["message" => "amount must be greater then 0."], Response::HTTP_NOT_FOUND);
+        {
+            // amount must be greater then 0.
+            return response(0, Response::HTTP_NOT_FOUND);
+        }
 
         // Logic
         try 
         {
             $originAccount = Account::find($origin);
-            if(!$originAccount)
-                return response()->json(["message" => "Origin account not found."], Response::HTTP_NOT_FOUND);
+            if(!$originAccount){
+                // Origin account not found.
+                return response(0, Response::HTTP_NOT_FOUND);
+            }
 
             $destinationAccount = Account::find($destination);
-            if(!$destinationAccount)
-                return response()->json(["message" => "Destination account not found."], Response::HTTP_NOT_FOUND);
+            if(!$destinationAccount){
+                // create if not exist
+                $destinationAccount = new Account($destination, 0);
+            }
 
-            if($originAccount->getBalance() < $amount)
-                throw new Exception("Origin account has insufficient funds");
+            if($originAccount->getBalance() < $amount){
+                // Origin account has insufficient funds.
+                return response(0, Response::HTTP_NOT_FOUND);
+            }
 
             $originAccount->withdraw($amount);
             $originAccount->save();
@@ -163,20 +218,22 @@ class AccountController extends Controller
         } 
         catch(\Exception $e)
         {
-            return response()->json(["message" => $e->getMessage()], Response::HTTP_NOT_FOUND);
+            return response(0, Response::HTTP_NOT_FOUND);
         }
         
         // Response
-        return response()->json([
-            'origin' => [
-                'id' => $originAccount->id,
-                'balance' => $originAccount->getBalance()
-            ],
-            'destination' => [
-                'id' => $destinationAccount->id,
-                'balance' => $destinationAccount->getBalance()
-            ]
-        ], Response::HTTP_OK);
+        return response('{"origin": {"id":"'.$originAccount->id.'", "balance":'.$originAccount->getBalance().'}, "destination": {"id":"'.$destinationAccount->id.'", "balance":'.$destinationAccount->getBalance().'}}', Response::HTTP_CREATED);
+
+        // return response()->json([
+        //     'origin' => [
+        //         'id' => $originAccount->id,
+        //         'balance' => $originAccount->getBalance()
+        //     ],
+        //     'destination' => [
+        //         'id' => $destinationAccount->id,
+        //         'balance' => $destinationAccount->getBalance()
+        //     ]
+        // ], Response::HTTP_CREATED);
     }
 
     public function event(Request $request)
@@ -184,7 +241,10 @@ class AccountController extends Controller
         $type = $request->input('type');
 
         if(empty($type))
-            return response()->json(["message" => 'type cannot be empty.'], Response::HTTP_NOT_FOUND);
+        {
+            // type cannot be empty.
+            return response(0, Response::HTTP_NOT_FOUND);
+        }
 
         switch ($type) 
         {
@@ -193,7 +253,8 @@ class AccountController extends Controller
             case self::EVENT_TRANSFER: return $this->eventTransfer($request); break;
             
             default: 
-                return response()->json(["message" => 'type not found.'], Response::HTTP_NOT_FOUND);
+                // type not found.
+                return response(0, Response::HTTP_NOT_FOUND);
                 break;
         }
     }
