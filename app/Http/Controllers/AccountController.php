@@ -20,11 +20,11 @@ class AccountController extends Controller
 
     public function balance(Request $request)
     {   
-        $account_id = $request->input('account_id');
-        if(empty($account_id))
+        $accountId = $request->input('account_id');
+        if(empty($accountId))
             return response()->json(["message" => "account_id cannot be empty."], Response::HTTP_NOT_FOUND);
 
-        $account = Account::find($account_id);
+        $account = Account::find($accountId);
         if(!$account)
             return response()->json(["message" => "Account not found."], Response::HTTP_NOT_FOUND);
 
@@ -41,6 +41,7 @@ class AccountController extends Controller
         $destination = $request->input('destination');
         $amount = $request->input('amount');
 
+        // Tests
         if(empty($destination))
             return response()->json(["message" => "destination cannot be empty."], Response::HTTP_NOT_FOUND);
 
@@ -51,16 +52,25 @@ class AccountController extends Controller
             return response()->json(["message" => "amount cannot be empty."], Response::HTTP_NOT_FOUND);
 
         if($amount <= 0)
-            return response()->json(["message" => "amount must be greater then 0."], Response::HTTP_NOT_FOUND);;
+            return response()->json(["message" => "amount must be greater then 0."], Response::HTTP_NOT_FOUND);
 
+        // Logic
+        try 
+        {
+            $account = Account::find($destination);
+            if($account)
+                $account->deposit($amount);
+            else
+                $account = new Account($destination, $amount);
 
-        $account = Account::find($destination);
-        if($account)
-            $account->deposit($amount);
-        else
-            $account = new Account($destination, $amount);
+            $account->save();
+        } 
+        catch(\Exception $e)
+        {
+            return response()->json(["message" => $e->getMessage()], Response::HTTP_NOT_FOUND);
+        }
 
-        $account->save();
+        // Response
         return response()->json([
             'destination' => [
                 'id' => $account->id,
@@ -69,14 +79,99 @@ class AccountController extends Controller
         ], Response::HTTP_OK);
     }
 
-    private function eventWithdraw()
+    private function eventWithdraw(Request $request)
     {
-        //TODO
+        $origin = $request->input('origin');
+        $amount = $request->input('amount');
+
+        // Tests
+        if(empty($origin))
+            return response()->json(["message" => "origin cannot be empty."], Response::HTTP_NOT_FOUND);
+
+        if(!is_numeric($origin))
+            return response()->json(["message" => "origin must be a integer."], Response::HTTP_NOT_FOUND);
+
+        if(empty($amount))
+            return response()->json(["message" => "amount cannot be empty."], Response::HTTP_NOT_FOUND);
+
+        if($amount <= 0)
+            return response()->json(["message" => "amount must be greater then 0."], Response::HTTP_NOT_FOUND);
+
+        // Logic
+        try 
+        {
+            $account = Account::find($origin);
+            if(!$account)
+                return response()->json(["message" => "Account not found."], Response::HTTP_NOT_FOUND);
+
+            $account->withdraw($amount);
+            $account->save();
+        } 
+        catch(\Exception $e)
+        {
+            return response()->json(["message" => $e->getMessage()], Response::HTTP_NOT_FOUND);
+        }
+        
+        // Response
+        return response()->json([
+            'destination' => [
+                'id' => $account->id,
+                'balance' => $account->getBalance()
+            ]
+        ], Response::HTTP_OK);
     }
 
-    private function eventTransfer()
+    private function eventTransfer(Request $request)
     {
-        //TODO
+        $originId = $request->input('origin');
+        $destination = $request->input('destination');
+        $amount = $request->input('amount');
+
+        // Tests
+        if(empty($origin))
+            return response()->json(["message" => "origin cannot be empty."], Response::HTTP_NOT_FOUND);
+
+        if(!is_numeric($origin))
+            return response()->json(["message" => "origin must be a integer."], Response::HTTP_NOT_FOUND);
+
+        if(empty($destination))
+            return response()->json(["message" => "destination cannot be empty."], Response::HTTP_NOT_FOUND);
+
+        if(!is_numeric($destination))
+            return response()->json(["message" => "destination must be a integer."], Response::HTTP_NOT_FOUND);
+
+        if(empty($amount))
+            return response()->json(["message" => "amount cannot be empty."], Response::HTTP_NOT_FOUND);
+
+        if($amount <= 0)
+            return response()->json(["message" => "amount must be greater then 0."], Response::HTTP_NOT_FOUND);
+
+        // Logic
+        try 
+        {
+            $account = Account::find($origin);
+            if(!$account)
+                return response()->json(["message" => "Account not found."], Response::HTTP_NOT_FOUND);
+
+            $destination = Account::find($destination);
+            if(!$destination)
+                return response()->json(["message" => "Account not found."], Response::HTTP_NOT_FOUND);
+
+            $account->withdraw($amount);
+            $account->save();
+        } 
+        catch(\Exception $e)
+        {
+            return response()->json(["message" => $e->getMessage()], Response::HTTP_NOT_FOUND);
+        }
+        
+        // Response
+        return response()->json([
+            'destination' => [
+                'id' => $account->id,
+                'balance' => $account->getBalance()
+            ]
+        ], Response::HTTP_OK);
     }
 
     public function event(Request $request)
@@ -89,8 +184,8 @@ class AccountController extends Controller
         switch ($type) 
         {
             case self::EVENT_DEPOSIT: return $this->eventDeposit($request); break;
-            case self::EVENT_DEPOSIT: return $this->eventWithdraw($request); break;
-            case self::EVENT_DEPOSIT: return $this->eventTransfer($request); break;
+            case self::EVENT_WITHDRAW: return $this->eventWithdraw($request); break;
+            case self::EVENT_TRANSFER: return $this->eventTransfer($request); break;
             
             default: 
                 return response()->json(["message" => 'type not found.'], Response::HTTP_NOT_FOUND);
